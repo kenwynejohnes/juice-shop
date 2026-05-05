@@ -29,7 +29,7 @@ on:
         type: string
 permissions:
   contents: read
-engine: copilot
+engine: claude
 tools:
   edit:
   bash:
