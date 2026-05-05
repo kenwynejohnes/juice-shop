@@ -45,6 +45,8 @@ tools:
     - "awk"
 safe-outputs:
   upload-asset:
+    allowed-exts: [".md"]
+    max-size: 1024
 timeout-minutes: 15
 strict: true
 ---
@@ -87,7 +89,7 @@ Follow the chosen skill exactly as written. In particular:
 
 Produce the triage report in the exact format specified by the chosen skill's `references/output-template.md`. Follow the template's stage-gating, category rules, and formatting rules without deviation.
 
-Save the final report to `triage-report.md` at the workflow workspace root. This file will be uploaded as a workflow artifact.
+Save the final report to `triage-report.md` at the workflow workspace root, then call the `upload_asset` tool with `path: "triage-report.md"` to publish it. Do not use `noop` for the final output.
 
 ## Constraints
 
