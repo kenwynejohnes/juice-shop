@@ -56,15 +56,36 @@ jobs:
             exit 1
           fi
 
+          # Strip any stray whitespace from JIRA_URL (paste-time newlines etc.)
+          JIRA_URL="${JIRA_URL%/}"
+          JIRA_URL="$(printf '%s' "$JIRA_URL" | tr -d '[:space:]')"
+          echo "Resolved JIRA_URL=[$JIRA_URL]"
+          echo "JIRA_KEY=[$JIRA_KEY]"
+
           response_file=$(mktemp)
+          curl_stderr=$(mktemp)
+          set +e
           http_code=$(curl -sS -o "$response_file" -w "%{http_code}" \
+            --connect-timeout 15 --max-time 60 \
             -H "Authorization: Bearer $JIRA_PAT" \
             -H "Accept: application/json" \
-            "$JIRA_URL/rest/api/2/issue/$JIRA_KEY")
+            "$JIRA_URL/rest/api/2/issue/$JIRA_KEY" \
+            2> "$curl_stderr")
+          curl_rc=$?
+          set -e
+
+          if [ "$curl_rc" -ne 0 ]; then
+            echo "::error::curl failed with exit code $curl_rc"
+            echo "--- curl stderr ---"
+            cat "$curl_stderr" || true
+            exit 1
+          fi
 
           if [ "$http_code" != "200" ]; then
             echo "::error::Jira returned HTTP $http_code for $JIRA_KEY"
+            echo "--- response body (first 500 chars) ---"
             head -c 500 "$response_file" || true
+            echo
             exit 1
           fi
 
