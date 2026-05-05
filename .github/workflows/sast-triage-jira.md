@@ -93,15 +93,42 @@ jobs:
           desc=$(jq -r '.fields.description // ""' "$response_file")
           issuetype=$(jq -r '.fields.issuetype.name // ""' "$response_file")
 
-          source_file=$(printf '%s' "$desc" | grep -oE 'Source File:[[:space:]]*[^[:space:]]+' | head -1 | sed -E 's/^Source File:[[:space:]]*//')
-          source_line=$(printf '%s' "$desc" | grep -oE 'Source Line:[[:space:]]*[0-9]+' | head -1 | sed -E 's/^Source Line:[[:space:]]*//')
-          rule_name=$(printf '%s' "$desc" | grep -m1 -oE 'Rule short description:[^\n]+' | sed -E 's/^Rule short description:[[:space:]]*//')
+          # Jira description uses *bold* markup for labels and [text | url] for
+          # links. Helper extracts a labeled field tolerantly:
+          #   - asterisks around the label (`*Label*:` or `*Label:*`) are optional
+          #   - whole rest of the line is captured (not just first whitespace token)
+          #   - Jira link [text | url] is collapsed to just `text`
+          extract_field() {
+            local label="$1"
+            printf '%s\n' "$desc" \
+              | grep -m1 -E "\*?${label}\*?:\*?[[:space:]]*" \
+              | sed -E "s/.*\*?${label}\*?:\*?[[:space:]]*//" \
+              | sed -E 's/^\[[[:space:]]*//; s/[[:space:]]*\|.*//; s/\][[:space:]]*$//' \
+              | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
+          }
+
+          source_file=$(extract_field 'Source File')
+          source_line_raw=$(extract_field 'Source Line')
+          source_line=$(printf '%s' "$source_line_raw" | grep -oE '[0-9]+' | head -1)
+
+          rule_name=$(printf '%s\n' "$desc" \
+            | grep -m1 -E '^[[:space:]-]*Rule short description:[[:space:]]*' \
+            | sed -E 's/.*Rule short description:[[:space:]]*//; s/[[:space:]]+$//')
           if [ -z "$rule_name" ]; then
-            rule_name=$(printf '%s' "$desc" | grep -m1 -oE 'Rule name:[^\n]+' | sed -E 's/^Rule name:[[:space:]]*//')
+            rule_name=$(printf '%s\n' "$desc" \
+              | grep -m1 -E '^[[:space:]-]*Rule name:[[:space:]]*' \
+              | sed -E 's/.*Rule name:[[:space:]]*//; s/[[:space:]]+$//')
           fi
           if [ -z "$rule_name" ]; then
             rule_name="$summary"
           fi
+
+          echo "DEBUG parsed:"
+          echo "  source_file=[$source_file]"
+          echo "  source_line=[$source_line]"
+          echo "  rule_name=[$rule_name]"
+          echo "  summary=[$summary]"
+          echo "  issuetype=[$issuetype]"
 
           if [ -z "$source_file" ] || [ -z "$source_line" ]; then
             echo "::error::Could not parse Source File / Source Line from Jira description for $JIRA_KEY"
