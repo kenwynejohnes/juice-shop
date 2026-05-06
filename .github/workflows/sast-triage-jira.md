@@ -153,106 +153,103 @@ jobs:
           echo "  source_file: $source_file"
           echo "  source_line: $source_line"
           echo "  vuln_type:   $rule_name"
+  jira_post:
+    runs-on: ubuntu-latest
+    needs: [agent]
+    if: always() && needs.agent.result == 'success'
+    steps:
+      - name: Download triage-output artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: triage-output
+          path: ./_artifacts
+      - name: Post triage to Jira
+        env:
+          JIRA_URL: ${{ vars.JIRA_URL }}
+          JIRA_PAT: ${{ secrets.JIRA_PAT }}
+          JIRA_KEY: ${{ inputs.jira_key }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          OUTPUT_FILE="./_artifacts/triage-output.json"
+
+          if [ ! -f "$OUTPUT_FILE" ]; then
+            echo "::error::triage-output.json not found in downloaded artifact"
+            find ./_artifacts -type f
+            exit 1
+          fi
+
+          if ! jq empty "$OUTPUT_FILE" 2>/dev/null; then
+            echo "::error::Agent output is not valid JSON"
+            head -c 500 "$OUTPUT_FILE" || true
+            exit 1
+          fi
+
+          verdict=$(jq -r '.verdict // ""' "$OUTPUT_FILE")
+          comment=$(jq -r '.comment_markdown // ""' "$OUTPUT_FILE")
+
+          case "$verdict" in
+            TRUE_POSITIVE)  new_label="TRUE-POSITIVE-(AI-TRIAGE)" ;;
+            FALSE_POSITIVE) new_label="FALSE-POSITIVE-(AI-TRIAGE)" ;;
+            UNCLEAR)        new_label="UNCLEAR-(AI-TRIAGE)" ;;
+            *)
+              echo "::error::Unknown or missing verdict in agent output: '$verdict'"
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$comment" ]; then
+            echo "::error::Agent output has empty comment_markdown"
+            exit 1
+          fi
+
+          footer=$(printf '\n\n----\n_Posted by [SAST Triage workflow](%s) — verdict: %s_' "$RUN_URL" "$verdict")
+          full_comment="$comment$footer"
+
+          label_payload=$(jq -n --arg new "$new_label" '{
+            update: {
+              labels: [
+                {add: $new},
+                {add: "ai-triaged"}
+              ]
+            }
+          }')
+
+          label_http=$(curl -sS -o /tmp/jira_label_resp -w "%{http_code}" -X PUT \
+            -H "Authorization: Bearer $JIRA_PAT" \
+            -H "Content-Type: application/json" \
+            "$JIRA_URL/rest/api/2/issue/$JIRA_KEY" \
+            -d "$label_payload")
+          if [ "$label_http" != "204" ]; then
+            echo "::error::Jira label update returned HTTP $label_http"
+            head -c 500 /tmp/jira_label_resp || true
+            exit 1
+          fi
+
+          comment_payload=$(jq -n --arg body "$full_comment" '{body: $body}')
+          comment_http=$(curl -sS -o /tmp/jira_comment_resp -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $JIRA_PAT" \
+            -H "Content-Type: application/json" \
+            "$JIRA_URL/rest/api/2/issue/$JIRA_KEY/comment" \
+            -d "$comment_payload")
+          if [ "$comment_http" != "201" ]; then
+            echo "::error::Jira comment creation returned HTTP $comment_http"
+            head -c 500 /tmp/jira_comment_resp || true
+            exit 1
+          fi
+
+          echo "✅ Jira $JIRA_KEY updated with label $new_label and triage comment"
 safe-outputs:
   noop:
-  upload-asset:
-    allowed-exts: [".json"]
-    max-size: 1024
-  jobs:
-    jira_post:
-      runs-on: ubuntu-latest
-      needs: [agent]
-      if: always() && needs.agent.result == 'success'
-      steps:
-        - name: Download triage output artifact
-          uses: actions/download-artifact@v4
-          with:
-            pattern: "*triage-output*"
-            path: ./_artifacts
-            merge-multiple: true
-
-        - name: Locate triage-output.json
-          id: locate
-          run: |
-            set -euo pipefail
-            output_file=$(find ./_artifacts -type f -name 'triage-output.json' | head -1)
-            if [ -z "$output_file" ]; then
-              echo "::error::triage-output.json not found in agent artifacts"
-              find ./_artifacts -type f
-              exit 1
-            fi
-            echo "output_file=$output_file" >> "$GITHUB_OUTPUT"
-
-        - name: Post triage to Jira
-          env:
-            JIRA_URL: ${{ vars.JIRA_URL }}
-            JIRA_PAT: ${{ secrets.JIRA_PAT }}
-            JIRA_KEY: ${{ inputs.jira_key }}
-            RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            OUTPUT_FILE: ${{ steps.locate.outputs.output_file }}
-          run: |
-            set -euo pipefail
-
-            if ! jq empty "$OUTPUT_FILE" 2>/dev/null; then
-              echo "::error::Agent output is not valid JSON"
-              head -c 500 "$OUTPUT_FILE" || true
-              exit 1
-            fi
-
-            verdict=$(jq -r '.verdict // ""' "$OUTPUT_FILE")
-            comment=$(jq -r '.comment_markdown // ""' "$OUTPUT_FILE")
-
-            case "$verdict" in
-              TRUE_POSITIVE)  new_label="TRUE-POSITIVE-(AI-TRIAGE)" ;;
-              FALSE_POSITIVE) new_label="FALSE-POSITIVE-(AI-TRIAGE)" ;;
-              UNCLEAR)        new_label="UNCLEAR-(AI-TRIAGE)" ;;
-              *)
-                echo "::error::Unknown or missing verdict in agent output: '$verdict'"
-                exit 1
-                ;;
-            esac
-
-            if [ -z "$comment" ]; then
-              echo "::error::Agent output has empty comment_markdown"
-              exit 1
-            fi
-
-            footer=$(printf '\n\n----\n_Posted by [SAST Triage workflow](%s) — verdict: %s_' "$RUN_URL" "$verdict")
-            full_comment="$comment$footer"
-
-            label_payload=$(jq -n --arg new "$new_label" '{
-              update: {
-                labels: [
-                  {add: $new},
-                  {add: "ai-triaged"}
-                ]
-              }
-            }')
-
-            label_http=$(curl -sS -o /tmp/jira_label_resp -w "%{http_code}" -X PUT \
-              -H "Authorization: Bearer $JIRA_PAT" \
-              -H "Content-Type: application/json" \
-              "$JIRA_URL/rest/api/2/issue/$JIRA_KEY" \
-              -d "$label_payload")
-            if [ "$label_http" != "204" ]; then
-              echo "::error::Jira label update returned HTTP $label_http"
-              head -c 500 /tmp/jira_label_resp || true
-              exit 1
-            fi
-
-            comment_payload=$(jq -n --arg body "$full_comment" '{body: $body}')
-            comment_http=$(curl -sS -o /tmp/jira_comment_resp -w "%{http_code}" -X POST \
-              -H "Authorization: Bearer $JIRA_PAT" \
-              -H "Content-Type: application/json" \
-              "$JIRA_URL/rest/api/2/issue/$JIRA_KEY/comment" \
-              -d "$comment_payload")
-            if [ "$comment_http" != "201" ]; then
-              echo "::error::Jira comment creation returned HTTP $comment_http"
-              head -c 500 /tmp/jira_comment_resp || true
-              exit 1
-            fi
-
-            echo "✅ Jira $JIRA_KEY updated with label $new_label and triage comment"
+post-steps:
+  - name: Upload triage-output.json as artifact
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: triage-output
+      path: triage-output.json
+      if-no-files-found: error
+      retention-days: 7
 timeout-minutes: 15
 strict: true
 ---
@@ -315,7 +312,7 @@ Rules:
 - `comment_markdown` must contain the full triage report following the skill's output template. Include `file:line` evidence for every claim. Use `**bold**` for headings and triple-backtick fences for code; Jira renders these.
 - Do **not** include the verdict label or footer in `comment_markdown` — those are added automatically by the post-step.
 
-After writing the JSON, call the `upload_asset` safe-output with `path: "triage-output.json"` so a downstream job can read it. Then call `noop` with a one-sentence summary.
+After writing the JSON, call `noop` with a one-sentence summary. The file at `triage-output.json` will be picked up automatically by the downstream Jira-posting job — you do not need to upload it.
 
 ## Constraints
 
