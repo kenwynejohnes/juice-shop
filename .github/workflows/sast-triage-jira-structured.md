@@ -1,4 +1,5 @@
 ---
+name: SAST Finding Triage (Jira, structured)
 description: Triage a SAST finding from a Jira ticket using structured JSON output (rendered to Jira wiki markup server-side)
 on:
   workflow_dispatch:
