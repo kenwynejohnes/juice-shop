@@ -1,0 +1,33 @@
+{
+  "_description": "Output schema for the hardcoded-secrets / password triager. The agent reads this file alongside SKILL.md and emits triage-output.json conforming to this shape. Placeholder strings in angle brackets describe expected content; for fields with a fixed enumeration, the placeholder shows the allowed values separated by ' | '.",
+
+  "triager_type": "password",
+  "triage_decision": "TRUE POSITIVE | FALSE POSITIVE",
+  "category": "<see SKILL.md Category rules; N/A for FALSE POSITIVE>",
+  "confidence": "Low | Medium | High",
+  "vulnerability_class": "Hardcoded Secret | Hardcoded Password | Hardcoded API Key | Hardcoded Token",
+  "summary": "<one plain-language sentence>",
+
+  "code_snippet": "<3-5 lines with all sensitive values redacted per SKILL.md rules, leading // Line N-M comment>",
+  "code_snippet_language": "<language>",
+  "code_location": "<file:line-range>",
+  "code_summary": "<one sentence>",
+
+  "files_examined": ["<paths>"],
+  "search_description": "<brief note>",
+
+  "flagged_value": "<the flagged credential value, redacted>",
+  "pattern": "<what the value looks like, e.g. high-entropy password, AWS key pattern, Base64 string>",
+  "context": "<file type, location, surrounding code with values redacted>",
+
+  "is_test_environment": false,
+  "is_encrypted": false,
+  "encryption_details": "<config details if encrypted, else empty string>",
+  "is_fallback_default": false,
+  "fallback_pattern": "<the pattern if fallback default, else empty string>",
+
+  "risk_reduction_factors": ["<each factor as a sentence with technical evidence; empty array if none>"],
+  "analysis_explanation": "<2-4 sentences using only redacted values>",
+  "key_facts": ["<critical evidence sentences>"],
+  "additional_observations": []
+}

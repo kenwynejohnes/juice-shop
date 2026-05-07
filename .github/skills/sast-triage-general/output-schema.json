@@ -1,0 +1,39 @@
+{
+  "_description": "Output schema for the general SAST triager. The agent reads this file alongside SKILL.md and emits triage-output.json conforming to this shape. Placeholder strings in angle brackets describe expected content; for fields with a fixed enumeration, the placeholder shows the allowed values separated by ' | '.",
+
+  "triager_type": "general",
+  "triage_decision": "TRUE POSITIVE | FALSE POSITIVE | UNCLEAR",
+  "category": "<see SKILL.md Category rules; N/A for TRUE POSITIVE or UNCLEAR>",
+  "additional_category": "<other FP reasons or N/A>",
+  "confidence": "Low | Medium | High",
+  "vulnerability_class": "<e.g. SSRF, XSS, XXE, Path Traversal, SQL Injection, Weak Cryptography, Insecure Deserialization, etc.>",
+  "summary": "<one plain-language sentence stating the finding and verdict>",
+
+  "code_snippet": "<3-5 lines of source as it appears in the file, verbatim, with a leading // Line N-M comment>",
+  "code_snippet_language": "<typescript | javascript | python | java | go | csharp | ...>",
+  "code_location": "<file:line-range, e.g. routes/userProfile.ts:74-98>",
+  "code_summary": "<one sentence describing what the code does>",
+
+  "files_examined": ["<file paths examined during analysis>"],
+  "search_description": "<brief note on identifiers, routes, callers traced>",
+
+  "vulnerability_in_code": "TRUE | FALSE | UNCLEAR",
+  "vulnerability_explanation": "<2-4 sentences citing file:line>",
+
+  "impact_assessment": "TRUE | FALSE | UNCLEAR | N/A",
+  "impact_explanation": "<2-4 sentences; empty string if N/A>",
+
+  "exploitable_assessment": "TRUE | FALSE | UNCLEAR | N/A",
+  "exploitable_explanation": "<2-4 sentences; empty string if N/A>",
+
+  "is_taint_flow_vuln": true,
+  "external_input": "TRUE | FALSE | UNCLEAR | <empty string if config issue or N/A>",
+  "trust_level": "Untrusted | Trusted (non-human) | Trusted (DevOps) | Privileged (human) | UNCLEAR | <empty>",
+  "taint_flow": "Viable | Blocked (explicit) | Blocked (implicit) | UNCLEAR | <empty>",
+  "sink_usage": "Dangerous | Secure API | Secure Config | Benign Use | UNCLEAR | <empty>",
+
+  "compensatory_controls": "<description of partial mitigations, or N/A>",
+  "key_facts": ["<3-8 declarative sentences, each citing concrete evidence>"],
+  "manual_review_points": ["<empty array unless triage_decision == UNCLEAR>"],
+  "additional_observations": ["<empty array unless an insight does not fit any other field>"]
+}

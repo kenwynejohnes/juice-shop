@@ -1,0 +1,45 @@
+{
+  "_description": "Output schema for the SSRF triager. The agent reads this file alongside SKILL.md and emits triage-output.json conforming to this shape. Placeholder strings in angle brackets describe expected content; for fields with a fixed enumeration, the placeholder shows the allowed values separated by ' | '.",
+
+  "triager_type": "ssrf",
+  "triage_decision": "TRUE POSITIVE | FALSE POSITIVE | UNCLEAR",
+  "category": "<see SKILL.md Category rules>",
+  "confidence": "Low | Medium | High",
+  "vulnerability_class": "SSRF",
+  "summary": "<one plain-language sentence>",
+
+  "code_snippet": "<3-5 lines with leading // Line N-M comment>",
+  "code_snippet_language": "<language>",
+  "code_location": "<file:line-range>",
+  "code_summary": "<one sentence>",
+
+  "files_examined": ["<paths>"],
+  "search_description": "<brief note>",
+
+  "ssrf_pattern_present": "TRUE | FALSE",
+  "ssrf_pattern_explanation": "<cite specific code (method, line, variable) showing the outbound request and attacker-controlled input>",
+
+  "is_test_code": false,
+  "is_test_code_explanation": "<cite file path, test framework, or state production code>",
+
+  "host_control": "TRUE | FALSE | N/A",
+  "host_control_explanation": "<empty string if N/A>",
+  "host_control_mitigations": "TRUE | FALSE | N/A",
+  "host_control_mitigations_explanation": "<empty string if N/A>",
+
+  "path_control": "TRUE | FALSE | N/A",
+  "path_control_explanation": "<empty string if N/A>",
+  "path_control_mitigations": "TRUE | FALSE | N/A",
+  "path_control_mitigations_explanation": "<empty string if N/A>",
+  "redirect_to_hostile": "TRUE | FALSE | N/A",
+  "redirect_to_hostile_explanation": "<empty string if N/A>",
+
+  "query_control": "TRUE | FALSE | N/A",
+  "query_control_explanation": "<empty string if N/A>",
+  "host_escalation": "TRUE | FALSE | N/A",
+  "host_escalation_explanation": "<empty string if N/A>",
+
+  "analysis_summary": "<2-4 sentences tying answers to the verdict>",
+  "key_facts": ["<critical evidence>"],
+  "additional_observations": []
+}
