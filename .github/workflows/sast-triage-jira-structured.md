@@ -37,7 +37,6 @@ jobs:
       vuln_type: ${{ steps.parse.outputs.vuln_type }}
       jira_summary: ${{ steps.parse.outputs.jira_summary }}
       jira_issuetype: ${{ steps.parse.outputs.jira_issuetype }}
-      vuln_desc_b64: ${{ steps.parse.outputs.vuln_desc_b64 }}
     steps:
       - name: Fetch and parse Jira ticket
         id: parse
@@ -139,21 +138,30 @@ jobs:
             exit 1
           fi
 
-          vuln_desc_b64=$(printf '%s' "$desc" | base64 -w 0 2>/dev/null || printf '%s' "$desc" | base64 | tr -d '\n')
-
           {
             echo "source_file=$source_file"
             echo "source_line=$source_line"
             echo "vuln_type=$rule_name"
             echo "jira_summary=$summary"
             echo "jira_issuetype=$issuetype"
-            echo "vuln_desc_b64=$vuln_desc_b64"
           } >> "$GITHUB_OUTPUT"
+
+          # Write the full description to a file the agent will read directly.
+          # Avoids embedding the description in the agent prompt.
+          printf '%s\n' "$desc" > jira-description.txt
 
           echo "✅ Parsed Jira ticket $JIRA_KEY"
           echo "  source_file: $source_file"
           echo "  source_line: $source_line"
           echo "  vuln_type:   $rule_name"
+          echo "  description bytes: $(wc -c < jira-description.txt)"
+      - name: Upload Jira description artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jira-description
+          path: jira-description.txt
+          if-no-files-found: error
+          retention-days: 1
   jira_post:
     runs-on: ubuntu-latest
     needs: [agent]
@@ -244,6 +252,12 @@ jobs:
           echo "✅ Jira $JIRA_KEY updated with label $new_label and triage comment"
 safe-outputs:
   noop:
+pre-agent-steps:
+  - name: Download Jira description artifact into workspace
+    uses: actions/download-artifact@v4
+    with:
+      name: jira-description
+      path: .
 post-steps:
   - name: Upload triage-output.json as artifact
     if: always()
@@ -268,13 +282,7 @@ You are triaging a SAST finding tracked in Jira ticket **${{ inputs.jira_key }}*
 - **source_line**: ${{ needs.jira_fetch.outputs.source_line }}
 - **issue_type**: ${{ needs.jira_fetch.outputs.jira_issuetype }}
 
-The full Jira description is provided as a base64-encoded blob below. Decode it before reading. (Encoding is used to safely pass multiline text through GitHub Actions outputs.)
-
-```
-${{ needs.jira_fetch.outputs.vuln_desc_b64 }}
-```
-
-To decode, you can use bash: `echo "<blob>" | base64 -d`. Or just read the description as-is — base64 of plain ASCII is recoverable by inspection if needed, but decoding is preferred.
+The full Jira description is in the file `jira-description.txt` at the workspace root. Read it once before starting the triage.
 
 ## Step 1 — Pick the right skill
 
