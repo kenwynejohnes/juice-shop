@@ -221,8 +221,7 @@ jobs:
           label_payload=$(jq -n --arg new "$new_label" '{
             update: {
               labels: [
-                {add: $new},
-                {add: "ai-triaged"}
+                {add: $new}
               ]
             }
           }')
