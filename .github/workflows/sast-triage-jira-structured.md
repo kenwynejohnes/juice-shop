@@ -252,6 +252,7 @@ jobs:
           echo "✅ Jira $JIRA_KEY updated with label $new_label and triage comment"
 safe-outputs:
   noop:
+  threat-detection: false
 pre-agent-steps:
   - name: Download Jira description artifact into workspace
     uses: actions/download-artifact@v4
