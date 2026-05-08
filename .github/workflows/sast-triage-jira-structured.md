@@ -166,6 +166,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [agent]
     if: always() && needs.agent.result == 'success'
+    permissions:
+      contents: read
     steps:
       - name: Checkout renderer script
         uses: actions/checkout@v4
