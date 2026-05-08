@@ -3,8 +3,8 @@
 
   "triager_type": "general",
   "triage_decision": "TRUE POSITIVE | FALSE POSITIVE | UNCLEAR",
-  "category": "<see SKILL.md Category rules; N/A for TRUE POSITIVE or UNCLEAR>",
-  "additional_category": "<other FP reasons or N/A>",
+  "category": "When triage_decision is TRUE POSITIVE: exactly 'N/A'. When triage_decision is UNCLEAR: exactly 'N/A'. When triage_decision is FALSE POSITIVE: one of: FP - NOISE:NotSecret | FP - NOISE:NotSensitiveDataLeak | FP - NOISE:Mismatch | FP - TRIVIAL:TestCode | FP - TRIVIAL:NotInProd | FP - TRIVIAL:NoRiskToCase | FP - TRIVIAL:NoRiskToModule | FP - THEORETICAL:NoExternalInput | FP - THEORETICAL:TrustedExternalNonhumanInput | FP - THEORETICAL:DevOpsCode | FP - THEORETICAL:TaintFlowNotFeasible | FP - THEORETICAL:BenignUse | FP - MITIGATED:InputValidation | FP - MITIGATED:SecureCode | FP - MITIGATED:SecureConfig | FP - MITIGATED:ApprovedCompensatingControl | FP - OTHERS.",
+  "additional_category": "Same allowed values as category, or 'N/A'. Use to record a secondary FP reason when multiple apply.",
   "confidence": "Low | Medium | High",
   "vulnerability_class": "<e.g. SSRF, XSS, XXE, Path Traversal, SQL Injection, Weak Cryptography, Insecure Deserialization, etc.>",
   "summary": "<one plain-language sentence stating the finding and verdict>",

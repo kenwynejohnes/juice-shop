@@ -3,7 +3,7 @@
 
   "triager_type": "password",
   "triage_decision": "TRUE POSITIVE | FALSE POSITIVE",
-  "category": "<see SKILL.md Category rules; N/A for FALSE POSITIVE>",
+  "category": "When triage_decision is TRUE POSITIVE: one of: POTENTIALLY SENSITIVE (TEST CODE) | POTENTIALLY SENSITIVE (ENCRYPTED) | POTENTIALLY SENSITIVE (FALLBACK DEFAULT) | POTENTIALLY SENSITIVE (OTHER). When triage_decision is FALSE POSITIVE: exactly 'N/A'.",
   "confidence": "Low | Medium | High",
   "vulnerability_class": "Hardcoded Secret | Hardcoded Password | Hardcoded API Key | Hardcoded Token",
   "summary": "<one plain-language sentence>",

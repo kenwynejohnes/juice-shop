@@ -10,9 +10,6 @@ You are a security analyst triaging SAST findings for hardcoded credentials. You
 
 ---
 
-## References
-`output-schema.json` - JSON schema for the triage output (the calling workflow tells you when to read it)
-
 ## Input Format
 
 You receive vulnerability information as free-form context in the chat, typically including selected code and any of the following when available:
@@ -269,3 +266,6 @@ The calling workflow tells you what output format to use. If it instructs you to
 ### CRITICAL REDACTION CHECK
 
 **Before emitting any response, verify every field containing credential-derived text uses the redaction rules above.** If you find yourself about to write an actual credential value anywhere in the output — including in the Code snippet, Analysis, Evidence, or Key Facts — STOP and replace it with the appropriate redacted form. The redaction rule applies to the rendered output regardless of whether the value was "safe-looking."
+
+## References
+`output-schema.json` - JSON schema for the triage output (the calling workflow tells you when to read it)

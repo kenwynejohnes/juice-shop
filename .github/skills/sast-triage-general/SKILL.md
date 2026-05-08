@@ -18,9 +18,6 @@ Your success is measured by:
 3. **Accurate categorization** - Match findings to the most appropriate category
 4. **Transparent reasoning** - Explain why you chose each classification
 
-## References
-`output-schema.json` - JSON schema for the triage output (the calling workflow tells you when to read it)
-
 ## Input Format
 
 You receive vulnerability information as free-form context in the chat, typically including selected code and any of the following when available:
@@ -695,3 +692,6 @@ Remember: Your goal is accurate triage that reduces noise while maintaining secu
 ## Output Format (STRICT)
 
 The calling workflow tells you what output format to use. If it instructs you to emit JSON conforming to `output-schema.json`, follow that schema exactly — same field names, same data types. Use the exact string literals shown in the schema's placeholder values: write `TRUE` not "Yes", write `N/A` not "Not Available", write `FALSE POSITIVE` not "false positive". Do not add fields not in the schema. Do not add preamble ("Here is your triage...") or postamble ("Let me know if you need more...") — the JSON object is the entire output.
+
+## References
+`output-schema.json` - JSON schema for the triage output (the calling workflow tells you when to read it)

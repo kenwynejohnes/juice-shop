@@ -3,7 +3,7 @@
 
   "triager_type": "ssrf",
   "triage_decision": "TRUE POSITIVE | FALSE POSITIVE | UNCLEAR",
-  "category": "<see SKILL.md Category rules>",
+  "category": "When triage_decision is TRUE POSITIVE: one of: PATH TRAVERSAL | HOST CONTROL | OPEN REDIRECT. When triage_decision is FALSE POSITIVE: one of: QUERY PARAMETER | MITIGATED | MISMATCH | TEST CODE. When triage_decision is UNCLEAR: exactly 'N/A'.",
   "confidence": "Low | Medium | High",
   "vulnerability_class": "SSRF",
   "summary": "<one plain-language sentence>",
