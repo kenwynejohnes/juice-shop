@@ -10,7 +10,7 @@ on:
         type: string
 permissions:
   contents: read
-engine: claude
+engine: copilot
 network:
   allowed:
     - defaults
