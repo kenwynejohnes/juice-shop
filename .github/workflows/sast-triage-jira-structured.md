@@ -10,6 +10,9 @@ on:
         type: string
 permissions:
   contents: read
+concurrency:
+  group: "gh-aw-${{ github.workflow }}-${{ inputs.jira_key }}"
+  cancel-in-progress: false
 engine: copilot
 network:
   allowed:
